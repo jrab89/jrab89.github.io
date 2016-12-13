@@ -21,6 +21,8 @@ twitter_username: jrab89
 github_username:  jrab89
 author: Jeff Rabovsky
 
+google_analytics: UA-88914248-1
+
 # Build settings
 markdown: kramdown
 theme: minima
