@@ -19,6 +19,7 @@ description: "Jeff Rabovsky's personal blog"
 url: https://jrab89.github.io
 twitter_username: jrab89
 github_username:  jrab89
+author: Jeff Rabovsky
 
 # Build settings
 markdown: kramdown
