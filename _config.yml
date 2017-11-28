@@ -15,7 +15,7 @@
 # in the templates via {{ site.myvariable }}.
 title: jrab89.github.io
 email: jrab89@gmail.com
-description: "Jeff Rabovsky's personal blog"
+description: ''
 url: https://jrab89.github.io
 twitter_username: jrab89
 github_username:  jrab89

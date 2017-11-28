@@ -1,4 +1,126 @@
-<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://jrab89.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://jrab89.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://jrab89.github.io/" rel="alternate" type="text/html" /><updated>2017-11-27T02:53:50-05:00</updated><id>https://jrab89.github.io//</id><title type="html">jrab89.github.io</title><subtitle>Jeff Rabovsky's personal blog</subtitle><author><name>Jeff Rabovsky</name></author><entry><title type="html">IPython in Terms of Pry</title><link href="https://jrab89.github.io/python/ruby/2016/12/11/ipython-in-terms-of-pry.html" rel="alternate" type="text/html" title="IPython in Terms of Pry" /><published>2016-12-11T15:00:00-05:00</published><updated>2016-12-11T15:00:00-05:00</updated><id>https://jrab89.github.io/python/ruby/2016/12/11/ipython-in-terms-of-pry</id><content type="html" xml:base="https://jrab89.github.io/python/ruby/2016/12/11/ipython-in-terms-of-pry.html">&lt;p&gt;One of the awesome things about Ruby is how flexible it is. With its dynamic typing, method_missing, reflection, and open classes, you can pretty much do anything, from anywhere, at any point in your programs! As the programmer, you can ask Ruby for a very sharp scalpel and it will gladly hand you one. &lt;a href=&quot;http://weblog.rubyonrails.org/2013/1/8/Rails-3-2-11-3-1-10-3-0-19-and-2-3-15-have-been-released/&quot;&gt;This can be problematic if you’re not careful&lt;/a&gt;, but this same flexibility is what allows Ruby code to be so concise and elegant. Ruby’s flexibility also allows for tools like &lt;a href=&quot;http://pryrepl.org/&quot;&gt;Pry&lt;/a&gt;. Pry is a powerful &lt;a href=&quot;https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop&quot;&gt;REPL&lt;/a&gt; that can also serve as a debugger by allowing you to embed it inside your Ruby programs.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xml" href="https://jrab89.github.io/feed.xslt.xml"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.3.1">Jekyll</generator><link href="https://jrab89.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://jrab89.github.io/" rel="alternate" type="text/html" /><updated>2017-11-27T18:11:26-06:00</updated><id>https://jrab89.github.io//</id><title type="html">jrab89.github.io</title><subtitle></subtitle><author><name>Jeff Rabovsky</name></author><entry><title type="html">JRuby and JDBC</title><link href="https://jrab89.github.io/jruby/ruby/java/2017/11/27/jruby-and-jdbc.html" rel="alternate" type="text/html" title="JRuby and JDBC" /><published>2017-11-27T14:00:00-06:00</published><updated>2017-11-27T14:00:00-06:00</updated><id>https://jrab89.github.io/jruby/ruby/java/2017/11/27/jruby-and-jdbc</id><content type="html" xml:base="https://jrab89.github.io/jruby/ruby/java/2017/11/27/jruby-and-jdbc.html">&lt;p&gt;At work, I was asked to provide a JDBC database URL for an &lt;a href=&quot;https://aws.amazon.com/rds/aurora/&quot;&gt;Amazon Aurora&lt;/a&gt; database that I setup. Despite having written a fair amount of Java in college, I’m definitely not an expert when it comes to the huge ecosystem of Java libraries and tooling. I’ve also never used JDBC before! So in order to avoid having to read a bunch of &lt;a href=&quot;http://www.oracle.com/technetwork/java/javase/tech/index-jsp-136101.html&quot;&gt;Oracle documentation&lt;/a&gt; and setup &lt;a href=&quot;https://www.jetbrains.com/idea/&quot;&gt;Java&lt;/a&gt; &lt;a href=&quot;https://gradle.org/&quot;&gt;stuff&lt;/a&gt;, I decided to try &lt;a href=&quot;http://jruby.org/&quot;&gt;JRuby&lt;/a&gt; to validate the JDBC database URL I was to hand off.&lt;/p&gt;
+
+&lt;p&gt;JRuby is an implementation of Ruby that’s written in Java instead of C. The current version of JRuby (9.1.x) is compatible with &lt;a href=&quot;https://en.wikipedia.org/wiki/Ruby_MRI&quot;&gt;MRI&lt;/a&gt; 2.3.x. But why bother with JRuby over MRI? JRuby allows you to embed a Ruby interpreter into Java applications and use Java libraries from your Ruby applications; you can run Ruby from your Java and Java from your Ruby! JRuby also has the advantage of being able to leverage JVM threads without being limited by a global interpreter lock, so you can have Ruby code running in parallel in the same process!&lt;/p&gt;
+
+&lt;h2 id=&quot;installation&quot;&gt;Installation&lt;/h2&gt;
+
+&lt;p&gt;On a Mac, you can install JRuby with &lt;a href=&quot;https://brew.sh/&quot;&gt;Homebrew&lt;/a&gt;. &lt;a href=&quot;https://rvm.io/&quot;&gt;RVM&lt;/a&gt; also works.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ brew install jruby
+Sleeping for 1s...
+==&amp;gt; Downloading https://search.maven.org/remotecontent?filepath=org/jruby/jruby-dist/9.1.14.0/jruby-dist-9.1.14.0-bin.tar.gz
+######################################################################################################################         100.0%
+🍺  /usr/local/Cellar/jruby/9.1.14.0: 1,305 files, 27.0MB, built in 1 minute 25 seconds
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Homebrew prefixes JRuby’s executables with “j”. So if you wanted to run &lt;code class=&quot;highlighter-rouge&quot;&gt;rake&lt;/code&gt; with JRuby you’d run &lt;code class=&quot;highlighter-rouge&quot;&gt;jrake&lt;/code&gt;. For MRI you’d still run &lt;code class=&quot;highlighter-rouge&quot;&gt;rake&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ ls -althrG /usr/local/bin | grep rake
+-rwxr-xr-x    1 jrabovsky  admin   476B Jan  3  2017 rake
+lrwxr-xr-x    1 jrabovsky  admin    34B Nov 24 20:28 jrake -&amp;gt; ../Cellar/jruby/9.1.14.0/bin/jrake
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;If you &lt;code class=&quot;highlighter-rouge&quot;&gt;jgem install&lt;/code&gt; gems with executables, those executables won’t be in your &lt;code class=&quot;highlighter-rouge&quot;&gt;PATH&lt;/code&gt;. To run JRuby gems’ executables, use JRuby’s &lt;code class=&quot;highlighter-rouge&quot;&gt;jruby -S&lt;/code&gt;. The &lt;code class=&quot;highlighter-rouge&quot;&gt;-S &lt;/code&gt; option tells JRuby to use &lt;strong&gt;its&lt;/strong&gt; version of the executable.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ jgem install rspec
+Fetching: rspec-support-3.7.0.gem (100%)
+Successfully installed rspec-support-3.7.0
+Fetching: rspec-core-3.7.0.gem (100%)
+Successfully installed rspec-core-3.7.0
+Fetching: diff-lcs-1.3.gem (100%)
+Successfully installed diff-lcs-1.3
+Fetching: rspec-expectations-3.7.0.gem (100%)
+Successfully installed rspec-expectations-3.7.0
+Fetching: rspec-mocks-3.7.0.gem (100%)
+Successfully installed rspec-mocks-3.7.0
+Fetching: rspec-3.7.0.gem (100%)
+Successfully installed rspec-3.7.0
+6 gems installed
+$ rspec
+bash: rspec: command not found
+$ jgem list
+
+*** LOCAL GEMS ***
+
+did_you_mean (default: 1.0.1)
+diff-lcs (1.3)
+jar-dependencies (default: 0.3.10)
+jruby-openssl (default: 0.9.21 java)
+jruby-readline (default: 1.1.1 java)
+json (default: 1.8.3 java)
+minitest (default: 5.4.1)
+net-telnet (default: 0.1.1)
+power_assert (default: 0.2.3)
+psych (default: 2.2.4 java)
+rake (default: 10.4.2)
+rdoc (default: 4.2.0)
+rspec (3.7.0)
+rspec-core (3.7.0)
+rspec-expectations (3.7.0)
+rspec-mocks (3.7.0)
+rspec-support (3.7.0)
+test-unit (default: 3.1.1)
+$ jruby -S rspec
+No examples found.
+
+
+Finished in 0.02254 seconds (files took 0.5004 seconds to load)
+0 examples, 0 failures
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;java-interoperability&quot;&gt;Java Interoperability&lt;/h2&gt;
+
+&lt;p&gt;To run Java code from JRuby, you first need to &lt;code class=&quot;highlighter-rouge&quot;&gt;require 'java'&lt;/code&gt;. This allows you to access Java classes in the classpath by specifying their full name. For example, the following calls the static &lt;a href=&quot;https://docs.oracle.com/javase/7/docs/api/java/lang/System.html#getProperties()&quot;&gt;getProperties&lt;/a&gt; method on the &lt;a href=&quot;https://docs.oracle.com/javase/7/docs/api/java/lang/System.html&quot;&gt;System&lt;/a&gt; class within the &lt;a href=&quot;https://docs.oracle.com/javase/7/docs/api/java/lang/package-summary.html&quot;&gt;java.lang&lt;/a&gt; package.&lt;/p&gt;
+
+&lt;div class=&quot;language-ruby highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'java'&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;java&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;lang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'java.runtime.version'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;getProperties&lt;/code&gt; method returns an instance of the &lt;a href=&quot;https://docs.oracle.com/javase/7/docs/api/java/util/Properties.html&quot;&gt;Properties&lt;/a&gt; class, which implements the &lt;a href=&quot;https://docs.oracle.com/javase/7/docs/api/java/util/Map.html&quot;&gt;Map&lt;/a&gt; interface. JRuby conveniently allows you to treat this object like a Ruby &lt;a href=&quot;https://ruby-doc.org/core-2.4.2/Hash.html&quot;&gt;Hash&lt;/a&gt;. Another nice thing JRuby does here is that it allows calling the Java method &lt;code class=&quot;highlighter-rouge&quot;&gt;getProperties&lt;/code&gt; with the more Ruby-like method name of &lt;code class=&quot;highlighter-rouge&quot;&gt;properties&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;jdbc&quot;&gt;JDBC&lt;/h2&gt;
+
+&lt;p&gt;JDBC’s classes are in the &lt;a href=&quot;https://docs.oracle.com/javase/7/docs/api/java/sql/package-summary.html&quot;&gt;java.sql&lt;/a&gt; and &lt;a href=&quot;https://docs.oracle.com/javase/7/docs/api/javax/sql/package-summary.html&quot;&gt;javax.sql&lt;/a&gt; Java packages.&lt;/p&gt;
+
+&lt;p&gt;In addition to JDBC itself, you also need a JDBC driver for the particular DBMS you’re working with. JDBC drivers are client-side adapters that implement the network protocols for different databases. The official JDBC driver for MySQL is packaged as the &lt;a href=&quot;https://github.com/jruby/activerecord-jdbc-adapter/tree/master/jdbc-mysql&quot;&gt;jdbc-mysql&lt;/a&gt; Ruby gem.&lt;/p&gt;
+
+&lt;p&gt;Here’s how you’d run a MySQL Docker container and then use JRuby and JDBC to execute a query against it:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=database -d mysql:5.7
+b115964fab20bfe6cddae01ab78b1dfeb8b07ff6cf9ac722b7c2f49fff781898
+$ jgem install jdbc-mysql
+Fetching: jdbc-mysql-5.1.44.gem (100%)
+Successfully installed jdbc-mysql-5.1.44
+1 gem installed
+$ jruby hello_jdbc.rb
+Hello JDBC!
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Where &lt;code class=&quot;highlighter-rouge&quot;&gt;hello_jdbc.rb&lt;/code&gt; contains:&lt;/p&gt;
+
+&lt;div class=&quot;language-ruby highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'java'&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'jdbc/mysql'&lt;/span&gt;
+
+&lt;span class=&quot;no&quot;&gt;Jdbc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;MySQL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;load_driver&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;database_url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'jdbc:mysql://localhost:3306/database'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;user&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'root'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;password&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'password'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;query&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'SELECT &quot;Hello JDBC!&quot;'&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;connection&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;java&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;sql&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;DriverManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;get_connection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;database_url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;result_set&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;connection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;create_statement&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;execute_query&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;result_set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;next?&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result_set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;get_string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content><author><name>Jeff Rabovsky</name></author><summary type="html">At work, I was asked to provide a JDBC database URL for an Amazon Aurora database that I setup. Despite having written a fair amount of Java in college, I’m definitely not an expert when it comes to the huge ecosystem of Java libraries and tooling. I’ve also never used JDBC before! So in order to avoid having to read a bunch of Oracle documentation and setup Java stuff, I decided to try JRuby to validate the JDBC database URL I was to hand off.</summary></entry><entry><title type="html">IPython in Terms of Pry</title><link href="https://jrab89.github.io/python/ruby/2016/12/11/ipython-in-terms-of-pry.html" rel="alternate" type="text/html" title="IPython in Terms of Pry" /><published>2016-12-11T14:00:00-06:00</published><updated>2016-12-11T14:00:00-06:00</updated><id>https://jrab89.github.io/python/ruby/2016/12/11/ipython-in-terms-of-pry</id><content type="html" xml:base="https://jrab89.github.io/python/ruby/2016/12/11/ipython-in-terms-of-pry.html">&lt;p&gt;One of the awesome things about Ruby is how flexible it is. With its dynamic typing, method_missing, reflection, and open classes, you can pretty much do anything, from anywhere, at any point in your programs! As the programmer, you can ask Ruby for a very sharp scalpel and it will gladly hand you one. &lt;a href=&quot;http://weblog.rubyonrails.org/2013/1/8/Rails-3-2-11-3-1-10-3-0-19-and-2-3-15-have-been-released/&quot;&gt;This can be problematic if you’re not careful&lt;/a&gt;, but this same flexibility is what allows Ruby code to be so concise and elegant. Ruby’s flexibility also allows for tools like &lt;a href=&quot;http://pryrepl.org/&quot;&gt;Pry&lt;/a&gt;. Pry is a powerful &lt;a href=&quot;https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop&quot;&gt;REPL&lt;/a&gt; that can also serve as a debugger by allowing you to embed it inside your Ruby programs.&lt;/p&gt;
 
 &lt;p&gt;My team at work primarily uses Python. I haven’t worked with Python much prior to my current position, but fortunately for me Ruby and Python have a lot in common; they’re both dynamically typed and interpreted languages. And they’ve both borrowed lots of ideas from Perl and Lisp. Yet, even though Ruby and Python are very similar, the tooling, libraries, and philosophy surrounding the two languages are different.&lt;/p&gt;
 
